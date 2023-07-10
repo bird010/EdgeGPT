@@ -122,9 +122,7 @@ class ChatHub:
             result_text = ""
             resp_txt_no_link = ""
             retry_count = 5
-            while True:
-                if wss.closed:
-                    break
+            while not wss.closed:
                 msg = await wss.recv()
                 if not msg:
                     retry_count -= 1
@@ -153,7 +151,7 @@ class ChatHub:
                                 == "GenerateContentQuery"
                             ):
                                 async with ImageGenAsync(
-                                    all_cookies=self.cookies
+                                    all_cookies=self.cookies,
                                 ) as image_generator:
                                     images = await image_generator.get_images(
                                         response["arguments"][0]["messages"][0]["text"],
@@ -162,9 +160,15 @@ class ChatHub:
                                     resp_txt = f"{resp_txt}\n![image{i}]({image})"
                                 draw = True
                             if (
-                                response["arguments"][0]["messages"][0]["contentOrigin"]
-                                != "Apology"
-                            ) and not draw and not raw:
+                                (
+                                    response["arguments"][0]["messages"][0][
+                                        "contentOrigin"
+                                    ]
+                                    != "Apology"
+                                )
+                                and not draw
+                                and not raw
+                            ):
                                 resp_txt = result_text + response["arguments"][0][
                                     "messages"
                                 ][0]["adaptiveCards"][0]["body"][0].get("text", "")
